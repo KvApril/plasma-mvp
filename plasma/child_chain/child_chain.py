@@ -4,6 +4,10 @@ from plasma_core.utils.transactions import get_deposit_tx, encode_utxo_id
 from .root_event_listener import RootEventListener
 
 
+import rlp
+from ethereum import utils
+from plasma_core.utils.address import address_to_hex
+
 class ChildChain(object):
 
     def __init__(self, operator, root_chain):
@@ -38,9 +42,12 @@ class ChildChain(object):
         return encode_utxo_id(self.current_block.number, len(self.current_block.transaction_set) - 1, 0)
 
     def submit_block(self, block):
+        if isinstance(block, str):
+            block = rlp.decode(utils.decode_hex(block), Block)
+
         self.chain.add_block(block)
         self.root_chain.transact({
-            'from': self.operator
+            'from': utils.checksum_encode(address_to_hex(self.operator))
         }).submitBlock(block.merkle.root)
         self.current_block = Block(number=self.chain.next_child_block)
 
@@ -48,7 +55,7 @@ class ChildChain(object):
         return self.chain.get_transaction(tx_id)
 
     def get_block(self, blknum):
-        return self.chain.get_block(blknum)
+        return rlp.encode(self.chain.get_block(blknum), Block).hex()
 
     def get_current_block(self):
-        return self.current_block
+        return rlp.encode(self.current_block, Block).hex()

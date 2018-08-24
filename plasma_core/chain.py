@@ -6,6 +6,10 @@ from plasma_core.exceptions import (InvalidBlockSignatureException,
                                     TxAlreadySpentException,
                                     TxAmountMismatchException)
 
+import rlp
+from ethereum import utils
+from plasma_core.transaction import Transaction
+from plasma_core.block import Block
 
 class Chain(object):
 
@@ -19,6 +23,9 @@ class Chain(object):
 
     def add_block(self, block):
         # Is the block being added to the head?
+        if isinstance(block, str):
+            block = rlp.decode(utils.decode_hex(block), Block).hex()
+
         is_next_child_block = block.number == self.next_child_block
         if is_next_child_block or block.number == self.next_deposit_block:
             self._validate_block(block)
@@ -51,6 +58,9 @@ class Chain(object):
         return True
 
     def validate_transaction(self, tx, temp_spent={}):
+        if isinstance(tx, str):
+            tx = rlp.decode(utils.decode_hex(tx), Transaction)
+
         input_amount = 0
         output_amount = tx.amount1 + tx.amount2
 
@@ -108,7 +118,7 @@ class Chain(object):
 
     def _validate_block(self, block):
         # Check for a valid signature.
-        if not block.is_deposit_block and (block.sig == NULL_SIGNATURE or address_to_hex(block.signer) != self.operator.lower()):
+        if not block.is_deposit_block and (block.sig == NULL_SIGNATURE or address_to_hex(block.signer) != address_to_hex(self.operator)):
             raise InvalidBlockSignatureException('failed to validate block')
 
         for tx in block.transaction_set:

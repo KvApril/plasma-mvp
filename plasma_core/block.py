@@ -51,6 +51,9 @@ class Block(rlp.Serializable):
         self.sig = sign(self.hash, key)
 
     def add_transaction(self, tx):
+        if isinstance(tx, str):
+            tx = rlp.decode(utils.decode_hex(tx), Transaction)
+
         self.transaction_set.append(tx)
         inputs = [(tx.blknum1, tx.txindex1, tx.oindex1), (tx.blknum2, tx.txindex2, tx.oindex2)]
         for i in inputs:

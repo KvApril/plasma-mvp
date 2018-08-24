@@ -49,8 +49,8 @@ class Client(object):
         encoded_transaction = rlp.encode(tx, UnsignedTransaction)
         self.root_chain.startExit(utxo_pos, encoded_transaction, proof, sigs, transact={'from': '0x' + tx.newowner1.hex()})
 
-    def withdraw_deposit(self, owner, deposit_pos, amount):
-        self.root_chain.startDepositExit(deposit_pos, amount, transact={'from': owner})
+    def withdraw_deposit(self, owner, deposit_pos, amount, token=NULL_ADDRESS,):
+        self.root_chain.startDepositExit(deposit_pos, token, amount, transact={'from': owner})
 
     def get_transaction(self, blknum, txindex):
         encoded_transaction = self.child_chain.get_transaction(blknum, txindex)
